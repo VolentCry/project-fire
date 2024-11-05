@@ -1,21 +1,32 @@
-import cv2
+from PIL import Image
+import os
 
-# Открываем изображение карты
-img = cv2.imread('map.png')
+def crop_and_split_image(input_image_path, output_folder):
+    # Открываем изображение
+    image = Image.open(input_image_path)
+    
+    # Обрезаем изображение до размеров 1000x1000
+    cropped_image = image.crop((0, 0, 500, 500))
+    
+    # Создаем папку для сохранения изображений, если она не существует
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
 
-# Преобразуем изображение в формат HSV
-hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    cropped_image.save(output_folder)
 
-low_vegetation = cv2.inRange(hsv, (40, 100, 100), (80, 255, 255))  # зеленый цвет с низкой насыщенностью
-forests = cv2.inRange(hsv, (40, 200, 100), (80, 255, 255))  # зеленый цвет с высокой насыщенностью
-mountains = cv2.inRange(hsv, (10, 100, 100), (30, 255, 255))  # коричневый цвет
-water = cv2.inRange(hsv, (100, 100, 100), (140, 255, 255))  # голубой цвет
+    # # Разбиваем изображение на блоки 10x10
+    # block_size = 10
+    # for i in range(0, 1000, block_size):
+    #     for j in range(0, 1000, block_size):
+    #         # Определяем границы блока
+    #         box = (j, i, j + block_size, i + block_size)
+    #         # Обрезаем блок
+    #         block = cropped_image.crop(box)
+    #         # Сохраняем блок
+    #         block.save(os.path.join(output_folder, f'block_{i//block_size}_{j//block_size}.png'))
 
-result = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+# Пример использования
+input_image_path = 'images\\kotik.jpg'  # Укажите путь к вашему изображению
+output_folder = 'images\\test'  # Укажите папку для сохранения блоков
+crop_and_split_image(input_image_path, output_folder)
 
-result[low_vegetation > 0] = (128, 255, 128)  # светло-зеленый цвет
-result[forests > 0] = (0, 128, 0)  # темно-зеленый цвет
-result[mountains > 0] = (165, 42, 42)  # коричневый цвет
-result[water > 0] = (0, 0, 255)  # голубой цвет
-
-cv2.imwrite('result.png', result)
